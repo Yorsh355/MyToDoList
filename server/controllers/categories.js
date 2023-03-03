@@ -4,31 +4,45 @@ module.exports = {
   createCategory: async (req, res) => {
     try {
       const { name, image } = req.body;
+
       const category = await pool.query(
         `SELECT * FROM categories WHERE name = '${name}'`
       );
-      if (category.rowCount > 0) {
-        return res.send("La categoría ya existe");
-      }
 
-      await pool.query(
-        `INSERT INTO categories (name, image) VALUES ('${name}', '${image}')`
+      category.rowCount > 0
+        ? res.send("Categoria ya existe")
+        : await pool.query(
+            `INSERT INTO categories (name, image) VALUES ('${name}', '${image}')`
+          );
+
+      return res.send("Categoria creada exitosamente");
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  getCategoryId: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const category = await pool.query(
+        `SELECT * FROM categories WHERE id_categories = ${id} `
       );
 
-      return res.send("Categoría creada exitosamente");
+      category.rows.length > 0
+        ? res.json(category.rows)
+        : res.status(404).json({ error: "Categoria no encontrada" });
     } catch (err) {
-      console.error(err);
-      return res.status(500).json({ message: err.message });
+      res.status(500).json({ error: err.message });
     }
   },
 
   getCategories: async (req, res) => {
     try {
       const category = await pool.query(`SELECT * FROM categories`);
-      return res.json(category);
+      res.json(category);
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ message: err.message });
+      res.status(500).json({ error: err.message });
     }
   },
 };
